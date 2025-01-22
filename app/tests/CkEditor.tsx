@@ -1,253 +1,102 @@
-'use client' // only in App Router
+'use client';
 
-import {CKEditor} from '@ckeditor/ckeditor5-react';
+import React, {useState, useCallback, useEffect} from 'react';
+import {useRouter} from "next/navigation";
+
+import Header from "@/app/components/Header";
+import Footer from "@/app/components/Footer";
+import {Spinner} from "@nextui-org/react";
+import LoremText from "@/app/assets/loremText";
+import DataLoader from "@/app/assets/dataLoader";
+import usePageTransition from "@/app/assets/usePageTransition";
 import {
-    ClassicEditor,
-    InlineEditor,
-    BalloonEditor,
+    Modal,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    Button,
+    Input,
+    RadioGroup,
+    Radio,
+} from '@nextui-org/react';
 
-    Essentials,
-    Heading,
+import dynamic from 'next/dynamic';
 
-    Bold,
-    Italic,
-    Underline,
-    Alignment,
+const CustomEditor = dynamic(() => import( '@/app/tests/CkEditor' ), {ssr: false});
 
-    FontSize,
-    FontBackgroundColor,
-    FontColor,
-    FontFamily,
+import Link from "next/link";
 
-    Link,
+export default function Home() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-    Image,
-    ImageBlock,
-    ImageCaption,
-    ImageInline,
-    ImageInsertViaUrl,
-    ImageResize,
-    ImageStyle,
-    ImageTextAlternative,
-    ImageToolbar,
-    ImageUpload,
-    ImageInsert,
-    SimpleUploadAdapter,
+  useEffect(() => {
+    if (isModalOpen) {
+      // Disable enforced focus behavior
+      const handleFocusOutside = (e: any) => {
+        if (!document.querySelector(".nextui-modal")?.contains(e.target)) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      };
 
-    List,
-    ListProperties,
+      // Add event listener to manage focus when modal is open
+      document.addEventListener("focus", handleFocusOutside, true);
 
-} from 'ckeditor5';
+      // Cleanup event listener on modal close
+      return () => {
+        document.removeEventListener("focus", handleFocusOutside, true);
+      };
+    }
+  }, [isModalOpen]);
 
-import 'ckeditor5/ckeditor5.css';
-import 'ckeditor5-premium-features/ckeditor5-premium-features.css';
-import FontWeight from '../assets/fontWeight';
-
-const LICENSE_KEY =
-    'eyJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3Mzc4NDk1OTksImp0aSI6IjM2ZTg0ODAzLWRmYzUtNGJkYy04MzFjLTI2Y2IzOTY4ZjQyYiIsInVzYWdlRW5kcG9pbnQiOiJodHRwczovL3Byb3h5LWV2ZW50LmNrZWRpdG9yLmNvbSIsImRpc3RyaWJ1dGlvbkNoYW5uZWwiOlsiY2xvdWQiLCJkcnVwYWwiLCJzaCJdLCJ3aGl0ZUxhYmVsIjp0cnVlLCJsaWNlbnNlVHlwZSI6InRyaWFsIiwiZmVhdHVyZXMiOlsiKiJdLCJ2YyI6ImUwNGJjZTRkIn0.0YnbXyXGoJigqYpCppDQSwJjhK2EgzbUVgpinviafWfICE4rXYpBgzx-OzViEgDeGRc-X8ergYAPjaFpuPyQnQ';
-
-function CustomEditor() {
     return (
-        <CKEditor
-            editor={InlineEditor}
-            config={{
-                licenseKey: LICENSE_KEY,
-                initialData: 'Welcome to CKEditor 5!',
-                placeholder: 'Type or paste your content here!',
+        <>
 
-                // 'fontFamily',  'insertImage',
+            <div className="flex flex-col min-h-svh">
 
-                toolbar: {
-                    items: ['bold', 'italic', 'underline',
-                         '|', 'fontSize',  'fontColor', 'fontBackgroundColor',
-                        '|', 'link' , '|','alignment','bulletedList'],
-                    shouldNotGroupWhenFull: false
-                },
+                <main className="flex-grow container mx-auto px-3"
+                      style={{maxWidth: '500px'}}>
 
-                plugins: [
+                    {/* Кнопка для открытия модального окна */}
+                    <Button className={"mt-4 mb-10"} onPress={() => setIsModalOpen(true)}>Open Editor</Button>
 
+                    <Modal
+                        isOpen={isModalOpen} // Связываем состояние с видимостью модального окна
+                        onClose={() => setIsModalOpen(false)} // Закрытие окна
+                        size={"lg"}
+                        placement="top"
 
-                    Essentials,
-                    Heading,
+                        isDismissable={false}
+                        className="nextui-modal"
 
-                    Bold,
-                    Italic,
-                    Underline,
-                    Alignment,
+                    >
+                        <ModalContent>
 
-                    FontSize,
-                    FontBackgroundColor,
-                    FontColor,
-                    FontFamily,
+                            <ModalHeader className="flex flex-row items-center justify-between pr-14">
 
-                    Link,
+                            </ModalHeader>
+                            <ModalBody className="pb-4">
 
-                    Image,
-                    ImageBlock,
-                    ImageCaption,
-                    ImageInline,
-                    ImageInsert,
-                    ImageInsertViaUrl,
-                    ImageResize,
-                    ImageStyle,
-                    ImageTextAlternative,
-                    ImageToolbar,
-                    ImageUpload,
-                    SimpleUploadAdapter,
+                                <CustomEditor/>
 
-                    List,
-                    ListProperties,
+                            </ModalBody>
+                            <ModalFooter className="m-0 pt-0 flex items-center justify-end">
 
-                ],
+                            </ModalFooter>
 
-                simpleUpload: {
-                    uploadUrl: '/api/upload',
-                },
-                image: {
-                    toolbar: [
-                        // 'toggleImageCaption',
-                        // 'imageTextAlternative',
-                        // '|',
-                        // 'imageStyle:inline',
-                        'imageStyle:wrapText',
-                        'imageStyle:breakText',
-                        '|',
-                        'resizeImage',
-                    ],
-                    resizeOptions: [
-                        {
-                            name: 'resizeImage:25',
-                            label: '25%',
-                            value: '25',
-                        },
-                        {
-                            name: 'resizeImage:50',
-                            label: '50%',
-                            value: '50',
-                        },
-                        {
-                            name: 'resizeImage:75',
-                            label: '75%',
-                            value: '75',
-                        },
-                        {
-                            name: 'resizeImage:original',
-                            label: 'Original',
-                            value: null,
-                        },
-                    ],
-                    resizeUnit: '%',
-                },
-                fontSize: {
-                    options: [12, 13, 14, 15, 'default', 17, 18, 19, 20],
-                    supportAllValues: true
-                },
-                fontFamily: {
-                    options: [
-                        'default',
-                        'Arial, Helvetica, sans-serif',
-                        'Courier New, Courier, monospace',
-                        'Georgia, serif',
-                        'Lucida Sans Unicode, Lucida Grande, sans-serif',
-                        'Tahoma, Geneva, sans-serif',
-                        'Times New Roman, Times, serif',
-                        'Trebuchet MS, Helvetica, sans-serif',
-                        'Verdana, Geneva, sans-serif',
-                    ],
-                },
-                // fontColor: {
-                //     colors: [
-                //         {
-                //             color: 'hsl(0, 0%, 0%)',
-                //             label: 'Black',
-                //         },
-                //         {
-                //             color: 'hsl(0, 0%, 30%)',
-                //             label: 'Dim grey',
-                //         },
-                //         {
-                //             color: 'hsl(0, 0%, 60%)',
-                //             label: 'Grey',
-                //         },
-                //         {
-                //             color: 'hsl(0, 0%, 90%)',
-                //             label: 'Light grey',
-                //         },
-                //         {
-                //             color: 'hsl(0, 0%, 100%)',
-                //             label: 'White',
-                //             hasBorder: true,
-                //         },
-                //     ],
-                // },
+                        </ModalContent>
+                    </Modal>
 
-                list: {
-                    properties: {
-                        styles: true,
-                        startIndex: true,
-                        reversed: true
-                    }
-                },
+                    <CustomEditor/>
 
-                link: {
-                    addTargetToExternalLinks: true,
-                    defaultProtocol: 'https://',
-                    decorators: {
-                        toggleDownloadable: {
-                            mode: 'manual',
-                            label: 'Downloadable',
-                            attributes: {
-                                download: 'file'
-                            }
-                        }
-                    }
-                },
-            }}
+                    {/*<LoremText paragraphs={2} onLoad={handleLoremLoad}/>*/}
+                    {/*<LoremText paragraphs={2}/>*/}
 
-            onReady={(editor) => {
-                //console.log('Editor is ready'); // Убедимся, что редактор готов
+                </main>
+                {/*<Footer width="500"/>*/}
+            </div>
 
-
-
-
-
-
-                editor.model.schema.extend('imageBlock', {
-                    allowAttributes: ['width'],
-                });
-                //console.log('Schema extended'); // Проверяем расширение схемы
-                editor.conversion.for('editingDowncast').add((dispatcher) => {
-                    dispatcher.on('insert:imageBlock', (evt, data, conversionApi) => {
-                        const viewWriter = conversionApi.writer;
-                        const viewFigure = conversionApi.mapper.toViewElement(data.item);
-
-                        // Проверяем, является ли элемент `figure` корректным
-                        if (viewFigure && viewFigure.is('element', 'figure')) {
-                            //console.log('Modifying figure styles'); // Логируем, что модифицируем figure
-                            viewWriter.setStyle('width', '25%', viewFigure); // Устанавливаем ширину на figure
-                            viewWriter.addClass('image_resized', viewFigure); // Добавляем класс image_resized
-                            viewWriter.addClass('image-style-align-left', viewFigure); // Добавляем класс image_resized
-
-                            editor.execute('resizeImage', { width: '25%' });
-
-                            // Обновляем состояние интерфейса, чтобы кнопка "Align Left" была активной
-                            const imageStyleCommand = editor.commands.get('imageStyle');
-                            if (imageStyleCommand) {
-                                // Выполняем команду imageStyle с нужным значением
-                                imageStyleCommand.execute({ value: 'alignLeft' });
-                            } else {
-                                console.error('Команда imageStyle не найдена.');
-                            }
-
-                        } else {
-                            console.error('Figure not found or invalid');
-                        }
-                    });
-                });
-            }}
-
-        />
-    );
+        </>
+    )
 }
-
-export default CustomEditor;
